@@ -1,1 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protein Run</title>
+    <style>
+        body {
+            font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            text-align: center;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        canvas {
+            background-color: #e9ecef;
+            border: 2px solid #ced4da;
+            border-radius: 4px;
+            display: block;
+            margin: 20px auto;
+        }
+        h1 {
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        .instructions {
+            font-size: 0.95em;
+            color: #6c757d;
+            margin-top: 15px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #0085A1;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            color: #00657b;
+        }
+    </style>
+</head>
+<body>
 
+    <div id="game-container">
+        <h1>PROTEIN RUN 🏃‍♂️🥩</h1>
+        <p>Chase the gains. Avoid the equipment.</p>
+        
+        <canvas id="gameCanvas" width="700" height="250"></canvas>
+        
+        <p class="instructions"><strong>Controls:</strong> Press <code>Spacebar</code> or <code>Up Arrow</code> to jump. Tap again to restart if you crash.</p>
+        
+        <a href="scratch.html" class="back-link">&larr; Back to The Iron Journey</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Game Variables
+        let score = 0;
+        let gameSpeed = 5;
+        let gravity = 0.6;
+        let isGameOver = false;
+        let frameCount = 0;
+
+        // Player Object
+        const player = {
+            x: 50,
+            y: 150,
+            width: 40,
+            height: 40,
+            dy: 0,
+            jumpForce: -11.5,
+            grounded: false
+        };
+
+        // Obstacles Array
+        let obstacles = [];
+
+        // Listen for Jump
+        document.addEventListener("keydown", (e) => {
+            if (e.code === "Space" || e.code === "ArrowUp") {
+                e.preventDefault(); // Stop spacebar from scrolling the page
+                if (isGameOver) {
+                    resetGame();
+                } else if (player.grounded) {
+                    player.dy = player.jumpForce;
+                    player.grounded = false;
+                }
+            }
+        });
+
+        function resetGame() {
+            score = 0;
+            gameSpeed = 5;
+            isGameOver = false;
+            frameCount = 0;
+            obstacles = [];
+            player.y = 150;
+            player.dy = 0;
+            gameLoop();
+        }
+
+        function spawnObstacle() {
+            // The spawn rate gets faster as your score goes up
+            let spawnRate = Math.max(50, 110 - Math.floor(score / 40)); 
+            
+            if (frameCount % spawnRate === 0) {
+                // Different types of gym obstacles
+                const types = [
+                    { name: "Dumbbell", width: 30, height: 20, color: "#495057" },
+                    { name: "Yoga Ball", width: 45, height: 45, color: "#e83e8c" },
+                    { name: "Bench", width: 65, height: 35, color: "#343a40" }
+                ];
+                
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - 20 - type.height,
+                    width: type.width,
+                    height: type.height,
+                    color: type.color,
+                    name: type.name
+                });
+            }
+        }
+
+        function drawPlayer() {
+            // Draw the bodybuilder
+            ctx.fillStyle = "#0085A1"; // Theme Blue
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("💪", player.x + 8, player.y + 28);
+        }
+
+        function drawGround() {
+            ctx.fillStyle = "#adb5bd";
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+        }
+
+        function drawTarget() {
+            // The uncatchable sack of protein floating ahead
+            ctx.fillStyle = "transparent";
+            ctx.font = "30px Arial";
+            // Bobs up and down using a sine wave
+            ctx.fillText("🥩", canvas.width - 50, canvas.height / 2 + Math.sin(frameCount / 10) * 15);
+        }
+
+        function drawObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                
+                // Add a tiny letter on the shape
+                ctx.fillStyle = "white";
+                ctx.font = "12px Arial";
+                ctx.fillText(obs.name.charAt(0), obs.x + obs.width/2 - 4, obs.y + 18);
+            }
+        }
+
+        function updateObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed; // Move left
+
+                // Collision Detection Logic
+                if (
+                    player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y
+                ) {
+                    isGameOver = true;
+                }
+            }
+
+            // Remove obstacles once they go off screen to save memory
+            if (obstacles.length > 0 && obstacles[0].x + obstacles[0].width < 0) {
+                obstacles.shift();
+            }
+        }
+
+        function drawScore() {
+            ctx.fillStyle = "#212529";
+            ctx.font = "bold 18px 'Open Sans', sans-serif";
+            ctx.fillText(`Score: ${Math.floor(score)}`, 20, 30);
+            ctx.font = "14px 'Open Sans', sans-serif";
+            ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, 20, 50);
+        }
+
+        function showGameOver() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "white";
+            ctx.font = "bold 36px 'Open Sans', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("GAINS LOST! 💥", canvas.width / 2, canvas.height / 2 - 10);
+            
+            ctx.font = "18px 'Open Sans', sans-serif";
+            ctx.fillText("Press Spacebar to try again", canvas.width / 2, canvas.height / 2 + 30);
+            ctx.textAlign = "left"; // Reset alignment
+        }
+
+        function gameLoop() {
+            if (isGameOver) {
+                showGameOver();
+                return; // Stop the loop
+            }
+
+            // Clear the canvas for the next frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Apply Physics
+            player.dy += gravity;
+            player.y += player.dy;
+
+            // Stop at Ground
+            if (player.y + player.height >= canvas.height - 20) {
+                player.y = canvas.height - 20 - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // Run Logic
+            spawnObstacle();
+            updateObstacles();
+            
+            // Progression
+            score += 0.1;
+            if (score % 100 < 0.1 && score > 10) {
+                gameSpeed += 0.4; // Speed up every 100 points
+            }
+            frameCount++;
+
+            // Render Everything
+            drawGround();
+            drawTarget();
+            drawPlayer();
+            drawObstacles();
+            drawScore();
+
+            // Loop again
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game!
+        gameLoop();
+    </script>
+</body>
+</html>
