@@ -1,1 +1,61 @@
+/* Requirement 1 & 2: Custom background color and Font Family */
+body {
+    background-color: #e9ecef;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
 
+/* Requirement 3: Font Color specification */
+h1, h2 {
+    color: #2b2d42;
+}
+
+/* Requirement 4: At least 4 style definitions (we have plenty here) */
+
+/* Styling the 3 specific DIVs required by the rubric */
+.header-block {
+    background-color: #8d99ae;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+}
+
+.content-block {
+    background-color: #ffffff;
+    padding: 40px;
+    line-height: 1.6;
+}
+
+.data-block {
+    background-color: #edf2f4;
+    padding: 30px;
+    text-align: center;
+    border-radius: 0 0 8px 8px;
+    border-top: 2px solid #8d99ae;
+}
+
+/* Extra styling for media */
+.custom-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.anchor-link {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+a {
+    color: #ef233c;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
