@@ -23,6 +23,8 @@ h1, h2 {
 }
 
 .content-block {
+    max-width: 800px;
+    margin: 0 auto;
     background-color: #ffffff;
     padding: 40px;
     line-height: 1.6;
